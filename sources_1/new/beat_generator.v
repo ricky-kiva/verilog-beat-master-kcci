@@ -66,6 +66,9 @@ module beat_generator(
             // Free-running LFSR: runs continuously on every clock cycle
             lfsr <= {lfsr[6:0], random_bit};
             
+            // Auto-clear done to guarantee a clean 1-cycle completion pulse
+            done <= 1'b0;
+            
             if (start && !generating) begin
                 if (sw3) begin
                     target_count <= 4'd12;
@@ -80,13 +83,12 @@ module beat_generator(
                     target_count <= 4'd4;
                 end
 
-                beat_sequence <= 24'd0;   // Fixed width: 24 bits
+                beat_sequence <= 24'd0;
                 beat_index    <= 4'd0;
                 beat_count    <= 4'd0;
-                whole_count   <= 2'd0;   // Reset counter for each new round
+                whole_count   <= 2'd0;
 
                 generating    <= 1'b1;
-                done          <= 1'b0;
             end
             else if (generating) begin
                 // If 2'b11 (whole note) appears more than twice, downgrade to 2'b10 (half note)
