@@ -191,7 +191,6 @@ module tb_top();
         press_button(2);
 
         // Intentionally tap too early (50 ms vs min possible 187 ms for 8th note)
-        // This is guaranteed to be outside the 25% tolerance window
         repeat(50 * CYCLES_PER_MS) @(posedge clk);
         press_button(2);
 
@@ -208,10 +207,43 @@ module tb_top();
 
         repeat(200) @(posedge clk);
 
+        // ======================================================
+        // ROUND 4: RESTORE WIN STREAK
+        // ======================================================
+        $display("[INFO] Starting Round 4 (Target: WIN & RESTORE STREAK)...");
+        press_button(1); // Start game
+
+        // Verify led[1] is still OFF when restarting (streak was broken)
+        @(posedge clk); #1;
+        if (led[1] !== 1'b0) begin
+            $display("[ERROR] Round 4: led[1] turned ON prematurely on game restart.");
+            error_count = error_count + 1;
+        end
+
+        // Wait for playback to finish
+        wait(uut.fsm_inst.state == 3'd3); // S_INPUT
+        repeat(100) @(posedge clk);
+
+        // Tap rhythm correctly again
+        play_winning_game();
+
+        // Wait for evaluation
+        wait(uut.fsm_inst.state == 3'd4); // S_RESULT
+        @(posedge clk); #1;
+
+        if (led[1] !== 1'b1) begin
+            $display("[ERROR] Round 4: led[1] did not turn ON after restoring win streak.");
+            error_count = error_count + 1;
+        end else begin
+            $display("[INFO] Round 4 PASSED: Win streak restored (led[1] is ON).");
+        end
+
+        repeat(200) @(posedge clk);
+
         // RESULT
         $display("========================================");
         if (error_count == 0) begin
-            $display("TOP MODULE: WIN-WIN-LOSE TEST SUCCESS");
+            $display("TOP MODULE: WIN-WIN-LOSE-WIN TEST SUCCESS");
         end
         else begin
             $display("TOP MODULE: TEST FAILED");
