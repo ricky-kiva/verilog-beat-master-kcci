@@ -95,7 +95,8 @@ module tb_rhythm_checker();
         // ======================================================
         // TEST CASE 1: Perfect timing
         // Sequence: 8th, Quarter, Half, Whole (00, 01, 10, 11)
-        // Expected: 250, 500, 1000, 2000
+        // Note: With 4 beats, we only check 3 intervals!
+        // Expected: 250, 500, 1000
         // ======================================================
         beat_count    = 4;
         beat_sequence = 16'b11_10_01_00; 
@@ -110,9 +111,7 @@ module tb_rhythm_checker();
         if (check_done !== 1'b0) begin $display("[ERROR] TC1: Failed early at 4th"); error_count = error_count + 1; end
         
         send_interval(1000);
-        if (check_done !== 1'b0) begin $display("[ERROR] TC1: Failed early at Half"); error_count = error_count + 1; end
-        
-        send_interval(2000);
+        // This is the 3rd interval, it should declare a WIN here
         if (check_done !== 1'b1 || win_flag !== 1'b1) begin 
             $display("[ERROR] TC1: Expected WIN but got done=%b win=%b", check_done, win_flag); 
             error_count = error_count + 1; 
@@ -122,10 +121,9 @@ module tb_rhythm_checker();
 
         // ======================================================
         // TEST CASE 2: Near-bounds timing (Tolerance = +/- 25%)
-        // 8th (250)    => 250/4 = 62   => Window: 188 to 312
-        // 4th (500)    => 500/4 = 125  => Window: 375 to 625
-        // Half (1000)  => 1000/4 = 250 => Window: 750 to 1250
-        // Whole (2000) => 2000/4 = 500 => Window: 1500 to 2500
+        // 8th (250)    => Window: 188 to 312
+        // 4th (500)    => Window: 375 to 625
+        // Half (1000)  => Window: 750 to 1250
         // ======================================================
         beat_count    = 4;
         beat_sequence = 16'b11_10_01_00; 
@@ -140,9 +138,7 @@ module tb_rhythm_checker();
         if (check_done !== 1'b0) begin $display("[ERROR] TC2: Failed at bounds 375"); error_count = error_count + 1; end
         
         send_interval(1250); // Half Max allowable
-        if (check_done !== 1'b0) begin $display("[ERROR] TC2: Failed at bounds 1250"); error_count = error_count + 1; end
-        
-        send_interval(1500); // Whole Min allowable
+        // This is the 3rd interval, expect WIN
         if (check_done !== 1'b1 || win_flag !== 1'b1) begin 
             $display("[ERROR] TC2: Expected WIN at bounds"); 
             error_count = error_count + 1; 
@@ -153,19 +149,17 @@ module tb_rhythm_checker();
         // ======================================================
         // TEST CASE 3: Out of bounds timing (Failure)
         // Quarter (500)    => Window: 375 to 625
-        // 8th (250)        => Window: 188 to 312
-        // Input: 500, 313
         // ======================================================
-        beat_count    = 2;
+        beat_count    = 2; // 2 beats = 1 interval to check
         beat_sequence = 16'b00_00_00_01; // Quarter, 8th 
         
         @(posedge clk);
         enable = 1'b1;
         
-        send_interval(500);
-        if (check_done !== 1'b0) begin $display("[ERROR] TC3: Failed on valid 500"); error_count = error_count + 1; end
+        // Intentionally send an interval outside the 25% tolerance for Quarter (500)
+        send_interval(313); 
         
-        send_interval(313); // 250 + 63 (Outside 25% tolerance by 1ms)
+        // Because beat_count is 2, it evaluates the final interval immediately
         if (check_done !== 1'b1 || win_flag !== 1'b0) begin 
             $display("[ERROR] TC3: Expected LOSE on 313, got done=%b win=%b", check_done, win_flag); 
             error_count = error_count + 1; 

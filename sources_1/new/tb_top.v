@@ -29,7 +29,7 @@ module tb_top();
 
     reg  [2:0] btn;
     reg  [2:0] sw;
-    wire [1:0] led;
+    wire [2:0] led;
 
     integer error_count;
     integer i;
@@ -72,7 +72,7 @@ module tb_top();
             press_button(2);
 
             // Dynamically match each note duration in the generated sequence
-            for (i = 0; i < uut.beat_count; i = i + 1) begin
+            for (i = 0; i < (uut.beat_count - 1); i = i + 1) begin
                 expected_note = uut.beat_sequence[i*2 +: 2];
                 
                 case(expected_note)
