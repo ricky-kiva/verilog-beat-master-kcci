@@ -43,7 +43,7 @@ module tap_detector #(
     wire tap_edge = (tap_in && !tap_in_d);
 
     // Provide single-cycle pulse on every tap edge while enabled
-    assign tap_pulse = enable && tap_edge;
+    assign tap_pulse = enable && tap_in;
     
     always @(posedge clk) begin
         if (reset) begin
