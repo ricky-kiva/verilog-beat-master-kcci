@@ -24,7 +24,7 @@ module top (
     input  wire       clk,     // 125 MHz system clock
     input  wire [2:0] btn,     // btn[0]=Reset, btn[1]=Start, btn[2]=Tap
     input  wire [2:0] sw,      // sw[0]=sw1(4 notes), sw[1]=sw2(8 notes), sw[2]=sw3(12 notes)
-    output wire [1:0] led      // led[0]=Rhythm/Tap feedback, led[1]=Win streak
+    output wire [2:0] led      // led[0]=Rhythm/Tap feedback, led[1]=Win streak
 );
     // ==========================================
     // Internal Wiring
@@ -61,6 +61,9 @@ module top (
     // led[0] flashes when the game plays the rhythm OR when the user taps
     assign led[0] = player_led_out | tap_pulse;
     assign led[1] = win_led_out;
+    
+    // led[2] turns on when beats are fully generated and played, waiting for user taps
+    assign led[2] = input_enable;
 
     // ==========================================
     // Module Instantiations
