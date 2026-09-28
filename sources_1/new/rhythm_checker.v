@@ -78,7 +78,8 @@ module rhythm_checker #(
                     (tap_interval_ms <= (expected_ms + tolerance))) begin
                     
                     // The tap was CORRECT
-                    if (current_index + 1'b1 == beat_count) begin
+                    // Check if we have completed (beat_count - 1) intervals
+                    if (current_index + 4'd2 == beat_count) begin
                         // Reached the end of the sequence successfully!
                         check_done <= 1'b1;
                         win_flag   <= 1'b1;
